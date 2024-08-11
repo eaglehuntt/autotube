@@ -1,23 +1,23 @@
-import { createFFmpeg } from "@ffmpeg/ffmpeg";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Slider, Spin } from "antd";
-import { VideoPlayer } from "./VideoPlayer";
-import { sliderValueToVideoTime } from "../utils/utils";
-import VideoUpload from "./VideoUpload";
+import { createFFmpeg } from "@ffmpeg/ffmpeg";
+import VideoPlayer from "./VideoPlayer";
+import FileUpload from "./FileUpload";
 import VideoConversionButton from "./VideoConversionButton";
+import { sliderValueToVideoTime } from "../utils/utils";
+
 const ffmpeg = createFFmpeg({ log: true });
 
 function VideoEditor() {
   const [ffmpegLoaded, setFFmpegLoaded] = useState(false);
-  const [videoFile, setVideoFile] = useState();
-  const [videoPlayerState, setVideoPlayerState] = useState();
-  const [videoPlayer, setVideoPlayer] = useState();
-  const [gifUrl, setGifUrl] = useState();
+  const [videoFile, setVideoFile] = useState(null);
+  const [videoPlayerState, setVideoPlayerState] = useState(null);
+  const [videoPlayer, setVideoPlayer] = useState(null);
+  const [gifUrl, setGifUrl] = useState(null);
   const [sliderValues, setSliderValues] = useState([0, 100]);
   const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
-    // loading ffmpeg on startup
     ffmpeg.load().then(() => {
       setFFmpegLoaded(true);
     });
@@ -25,8 +25,6 @@ function VideoEditor() {
 
   useEffect(() => {
     const min = sliderValues[0];
-    // when the slider values are updated, updating the
-    // video time
     if (min !== undefined && videoPlayerState && videoPlayer) {
       videoPlayer.seek(sliderValueToVideoTime(videoPlayerState.duration, min));
     }
@@ -34,10 +32,7 @@ function VideoEditor() {
 
   useEffect(() => {
     if (videoPlayer && videoPlayerState) {
-      // allowing users to watch only the portion of
-      // the video selected by the slider
       const [min, max] = sliderValues;
-
       const minTime = sliderValueToVideoTime(videoPlayerState.duration, min);
       const maxTime = sliderValueToVideoTime(videoPlayerState.duration, max);
 
@@ -45,20 +40,16 @@ function VideoEditor() {
         videoPlayer.seek(minTime);
       }
       if (videoPlayerState.currentTime > maxTime) {
-        // looping logic
         videoPlayer.seek(minTime);
       }
     }
   }, [videoPlayerState]);
 
   useEffect(() => {
-    // when the current videoFile is removed,
-    // restoring the default state
     if (!videoFile) {
-      setVideoPlayerState(undefined);
+      setVideoPlayerState(null);
       setSliderValues([0, 100]);
-      setVideoPlayerState(undefined);
-      setGifUrl(undefined);
+      setGifUrl(null);
     }
   }, [videoFile]);
 
@@ -69,80 +60,63 @@ function VideoEditor() {
         tip={!ffmpegLoaded ? "Waiting for FFmpeg to load..." : "Processing..."}
       >
         <div>
-          {videoFile ? (
-            <VideoPlayer
-              src={URL.createObjectURL(videoFile)}
-              onPlayerChange={(videoPlayer) => {
-                setVideoPlayer(videoPlayer);
-              }}
-              onChange={(videoPlayerState) => {
-                setVideoPlayerState(videoPlayerState);
-              }}
-            />
-          ) : (
-            <h1>Upload a video</h1>
-          )}
+          <h1>Upload a video</h1>
         </div>
-        <div className={"upload-div"}>
-          <VideoUpload
+        <div className="upload-div">
+          <FileUpload
             disabled={!!videoFile}
-            onChange={(videoFile) => {
-              setVideoFile(videoFile);
-            }}
-            onRemove={() => {
-              setVideoFile(undefined);
-            }}
+            onChange={(videoFile) => setVideoFile(videoFile)}
+            onRemove={() => setVideoFile(null)}
           />
         </div>
-        <div className={"slider-div"}>
-          <h3>Loop Video</h3>
+        <div className="slider-div">
+          <h3>Cut Video</h3>
           <Slider
             disabled={!videoPlayerState}
             value={sliderValues}
-            range={true}
-            onChange={(values) => {
-              setSliderValues(values);
-            }}
-            tooltip={{
-              formatter: null,
-            }}
+            range
+            onChange={(values) => setSliderValues(values)}
+            tooltip={{ formatter: null }}
           />
         </div>
-        <div className={"conversion-div"}>
+        <div className="conversion-div">
           <VideoConversionButton
-            onConversionStart={() => {
-              setProcessing(true);
-            }}
-            onConversionEnd={() => {
-              setProcessing(false);
-            }}
+            onConversionStart={() => setProcessing(true)}
+            onConversionEnd={() => setProcessing(false)}
             ffmpeg={ffmpeg}
             videoPlayerState={videoPlayerState}
             sliderValues={sliderValues}
             videoFile={videoFile}
-            onGifCreated={(girUrl) => {
-              setGifUrl(girUrl);
-            }}
+            onGifCreated={(gifUrl) => setGifUrl(gifUrl)}
           />
         </div>
         {gifUrl && (
-          <div className={"gif-div"}>
+          <div className="gif-div">
             <h3>Resulting GIF</h3>
             <img
               src={gifUrl}
-              className={"gif"}
-              alt={"GIF file generated in the client side"}
+              className="gif"
+              alt="GIF file generated in the client side"
             />
             <a
               href={gifUrl}
-              download={"test.gif"}
-              className={"ant-btn ant-btn-default"}
+              download="test.gif"
+              className="ant-btn ant-btn-default"
             >
               Download
             </a>
           </div>
         )}
       </Spin>
+      {videoFile ? (
+        <VideoPlayer
+          src={URL.createObjectURL(videoFile)}
+          onPlayerChange={(videoPlayer) => setVideoPlayer(videoPlayer)}
+          onChange={(videoPlayerState) => setVideoPlayerState(videoPlayerState)}
+        />
+      ) : (
+        <div></div>
+      )}
     </div>
   );
 }
