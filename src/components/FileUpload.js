@@ -1,21 +1,30 @@
 import React from "react";
 import { InboxOutlined } from "@ant-design/icons";
-import { Button, message, Upload } from "antd";
+import { Button, Upload } from "antd";
 const { Dragger } = Upload;
 
 function FileUpload({ disabled, onChange = () => {}, onRemove = () => {} }) {
+  const [fileList, setFileList] = React.useState([]);
+
   const props = {
     name: "file",
-    multiple: true, // Allow only one file upload at a time
+    multiple: true, // Allow multiple file uploads
     beforeUpload: () => {
-      // Prevent automatic upload
+      // Prevent automatic upload (this is a client side app)
       return false;
     },
 
-    showUploadList: true, // Do not show upload list
+    showUploadList: false, // Do not show upload list
+    fileList: fileList,
     onChange(info) {
-      if (info.fileList && info.fileList.length > 0) {
-        onChange(info.fileList[0].originFileObj);
+      console.log("File list:", info.fileList); // Log the file list to understand its structure
+      setFileList(info.fileList); // Update internal file list state
+
+      // Ensure fileList is an array and handle accordingly
+      if (Array.isArray(info.fileList) && info.fileList.length > 0) {
+        const file = info.fileList[0].originFileObj;
+        console.log("Uploaded file:", file); // Log the file to console
+        onChange(file);
       }
     },
     onDrop(e) {
@@ -23,25 +32,27 @@ function FileUpload({ disabled, onChange = () => {}, onRemove = () => {} }) {
     },
   };
 
+  React.useEffect(() => {
+    // Clear fileList when onRemove is triggered
+    setFileList([]);
+  }, [onRemove]);
+
   return (
     <>
-      <Dragger {...props} disabled={disabled}>
+      <Dragger {...props} disabled={false} className="upload-container">
+        {" "}
+        {/* Always enabled */}
         <p className="ant-upload-drag-icon">
           <InboxOutlined />
         </p>
-        <p className="ant-upload-text">
-          Click or drag file to this area to upload
-        </p>
-        <p className="ant-upload-hint">
-          Support for a single video upload. Strictly prohibited from uploading
-          company data or other banned files.
-        </p>
+        <p className="ant-upload-text">Click or drag to upload</p>
+        <p className="ant-upload-hint">Support for single or bulk files.</p>
       </Dragger>
       <Button
         danger
-        disabled={!disabled}
+        disabled={disabled}
         onClick={() => {
-          onRemove(); // Call onRemove to clear the video
+          onRemove(); // Call onRemove to clear the file
         }}
       >
         Remove

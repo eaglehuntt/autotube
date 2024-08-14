@@ -14,22 +14,19 @@ export function VideoPlayer({
   onChange = () => {},
   startTime = undefined,
 }) {
-  const [player, setPlayer] = useState(undefined);
-  const [playerState, setPlayerState] = useState(undefined);
+  const [player, setPlayer] = useState(null);
+  const [playerState, setPlayerState] = useState(null);
 
   useEffect(() => {
-    if (playerState) {
-      onChange(playerState);
-    }
-  }, [playerState]);
-
-  useEffect(() => {
-    onPlayerChange(player);
-
     if (player) {
       player.subscribeToStateChange(setPlayerState);
+      onPlayerChange(player);
     }
   }, [player]);
+
+  useEffect(() => {
+    onChange(playerState);
+  }, [playerState]);
 
   return (
     <div className={"video-player"}>

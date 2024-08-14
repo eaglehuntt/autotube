@@ -35,3 +35,7 @@
   height: 300px;
   max-width: 500px;
 }
+
+.ant-upload-wrapper {
+  min-width: 500px;
+}
