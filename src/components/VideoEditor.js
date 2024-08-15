@@ -137,21 +137,18 @@ function VideoEditor() {
             videoPlayerState={videoPlayerState}
             sliderValues={sliderValues}
             videoFile={videoFile}
-            onGifCreated={(gifUrl) => setGifUrl(gifUrl)}
-            disabled={isProcessingDisabled} // Disable processing if either file is missing
+            audioFile={audioFile} // Ensure audioFile is passed as a prop
+            onVideoCreated={(videoUrl) => setGifUrl(videoUrl)} // Update the callback to handle video URL
+            disabled={isProcessingDisabled}
           />
         </div>
         {gifUrl && (
           <div className="gif-div">
-            <h3>Resulting GIF</h3>
-            <img
-              src={gifUrl}
-              className="gif"
-              alt="GIF file generated in the client side"
-            />
+            <h3>Resulting Video</h3>
+            <video controls src={gifUrl} className="video-result" />
             <a
               href={gifUrl}
-              download="test.gif"
+              download="output.mp4"
               className="ant-btn ant-btn-default"
             >
               Download
